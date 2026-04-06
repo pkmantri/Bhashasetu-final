@@ -3,7 +3,9 @@ from __future__ import annotations
 import json
 import os
 import re
+import time
 import uuid
+import hashlib
 from datetime import datetime
 from io import BytesIO
 from pathlib import Path
@@ -22,6 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent
 HISTORY_FILE = BASE_DIR / "history_Pankaj.json"
 USER_DATA_FILE = BASE_DIR / "user_data.json"
 GENERATED_AUDIO_DIR = BASE_DIR / "static" / "generated"
+TTS_CACHE: dict[str, str] = {}
 
 LANGUAGES = {
     "Arabic": "ar",
@@ -565,10 +568,36 @@ def create_audio_file(text: str, language_name: str) -> str:
         raise ValueError("Unsupported language selection.")
 
     tts_code = GTTS_LANGUAGE_OVERRIDES.get(language_code, language_code.split("-")[0])
+
+    normalized_text = re.sub(r"\s+", " ", text.strip())
+    cache_key = hashlib.sha256(f"{tts_code}::{normalized_text}".encode("utf-8")).hexdigest()
+    cached_filename = TTS_CACHE.get(cache_key)
+    if cached_filename:
+        cached_path = GENERATED_AUDIO_DIR / cached_filename
+        if cached_path.exists():
+            return f"/static/generated/{cached_filename}"
+
     filename = f"tts-{uuid.uuid4().hex}.mp3"
     output_path = GENERATED_AUDIO_DIR / filename
-    gTTS(text=text.strip(), lang=tts_code, slow=False).save(output_path)
-    return f"/static/generated/{filename}"
+
+    last_error: Exception | None = None
+    for attempt in range(3):
+        try:
+            gTTS(text=normalized_text, lang=tts_code, slow=False).save(output_path)
+            TTS_CACHE[cache_key] = filename
+            return f"/static/generated/{filename}"
+        except Exception as exc:
+            last_error = exc
+            if attempt < 2:
+                # Backoff helps when upstream TTS starts rate-limiting.
+                time.sleep(0.8 * (attempt + 1))
+
+    if output_path.exists():
+        try:
+            output_path.unlink()
+        except OSError:
+            pass
+    raise ValueError(f"TTS temporarily unavailable. Please retry in a few seconds. ({last_error})")
 
 
 def build_dashboard_data() -> dict[str, Any]:
