@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BhashaSetu</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="page-shell">
+        <header class="hero">
+            <div>
+                <p class="eyebrow">BhashaSetu</p>
+                <h1>Language Translator app</h1>
+                <p class="hero-copy">Translate text, analyze grammar, practice conversations, process PDFs, and use browser voice input without switching tools.</p>
+                <div class="auth-inline" id="auth-inline">
+                    <span id="auth-user-label">Not signed in</span>
+                    <button id="logout-btn" class="ghost-button hidden" type="button">Sign out</button>
+                </div>
+            </div>
+            <div class="hero-stats">
+                <article class="stat-card">
+                    <span>Translations today</span>
+                    <strong id="stat-translations-today">{{ app_data.stats.translations_today }}</strong>
+                </article>
+                <article class="stat-card">
+                    <span>Total translations</span>
+                    <strong id="stat-total-translations">{{ app_data.stats.total_translations }}</strong>
+                </article>
+                <article class="stat-card">
+                    <span>Chat messages</span>
+                    <strong id="stat-chat-messages">{{ app_data.stats.chat_messages }}</strong>
+                </article>
+                <article class="stat-card">
+                    <span>Languages used</span>
+                    <strong id="stat-languages-used">{{ app_data.stats.languages_used }}</strong>
+                </article>
+            </div>
+        </header>
+
+        <section id="auth-panel" class="panel-card auth-panel hidden">
+            <div class="auth-switcher" role="tablist" aria-label="Authentication forms">
+                <button id="auth-tab-login" class="auth-tab active" type="button" data-auth-tab="login">Sign in</button>
+                <button id="auth-tab-signup" class="auth-tab" type="button" data-auth-tab="signup">Sign up</button>
+                <button id="auth-tab-forgot" class="auth-tab" type="button" data-auth-tab="forgot">Forgot password</button>
+            </div>
+
+            <div id="auth-status" class="status"></div>
+
+            <form id="auth-form-login" class="auth-form active" novalidate>
+                <div class="field-row">
+                    <label>
+                        <span>Username</span>
+                        <input id="login-username" type="text" autocomplete="username" required>
+                    </label>
+                    <label>
+                        <span>Password</span>
+                        <input id="login-password" type="password" autocomplete="current-password" required>
+                    </label>
+                </div>
+                <button id="login-submit" type="submit">Sign in</button>
+            </form>
+
+            <form id="auth-form-signup" class="auth-form" novalidate>
+                <div class="field-row">
+                    <label>
+                        <span>Full name</span>
+                        <input id="signup-full-name" type="text" autocomplete="name" required>
+                    </label>
+                    <label>
+                        <span>Username</span>
+                        <input id="signup-username" type="text" autocomplete="username" required>
+                    </label>
+                </div>
+                <div class="field-row">
+                    <label>
+                        <span>Password</span>
+                        <input id="signup-password" type="password" autocomplete="new-password" required>
+                    </label>
+                    <label>
+                        <span>Confirm password</span>
+                        <input id="signup-confirm-password" type="password" autocomplete="new-password" required>
+                    </label>
+                </div>
+                <div class="field-row">
+                    <label>
+                        <span>Security question</span>
+                        <input id="signup-security-question" type="text" placeholder="Example: What is my favorite city?" required>
+                    </label>
+                    <label>
+                        <span>Security answer</span>
+                        <input id="signup-security-answer" type="text" required>
+                    </label>
+                </div>
+                <button id="signup-submit" type="submit">Create account</button>
+            </form>
+
+            <form id="auth-form-forgot" class="auth-form" novalidate>
+                <div class="field-row">
+                    <label>
+                        <span>Username</span>
+                        <input id="forgot-username" type="text" autocomplete="username" required>
+                    </label>
+                    <label>
+                        <span>Verification question</span>
+                        <input id="forgot-question" type="text" readonly placeholder="Click Get question first">
+                    </label>
+                </div>
+                <div class="action-row">
+                    <button id="forgot-get-question" type="button" class="ghost-button">Get question</button>
+                </div>
+                <div class="field-row">
+                    <label>
+                        <span>Answer</span>
+                        <input id="forgot-answer" type="text" required>
+                    </label>
+                    <label>
+                        <span>New password</span>
+                        <input id="forgot-new-password" type="password" autocomplete="new-password" required>
+                    </label>
+                </div>
+                <label>
+                    <span>Confirm new password</span>
+                    <input id="forgot-confirm-password" type="password" autocomplete="new-password" required>
+                </label>
+                <button id="forgot-reset-submit" type="submit">Reset password</button>
+            </form>
+        </section>
+
+        <div id="app-shell">
+        <nav class="tabs" aria-label="Application sections">
+            <button class="tab-button active" data-tab="translate">Translate</button>
+            <button class="tab-button" data-tab="analyze">Analyze</button>
+            <button class="tab-button" data-tab="chat">Conversation</button>
+            <button class="tab-button" data-tab="voice">Voice</button>
+            <button class="tab-button" data-tab="pdf">PDF</button>
+            <button class="tab-button" data-tab="history">History</button>
+        </nav>
+
+        <main>
+            <section class="tab-panel active" id="tab-translate">
+                <div class="panel-grid two-column">
+                    <section class="panel-card">
+                        <h2>Text Translator</h2>
+                        <div class="field-row">
+                            <label>
+                                <span>From</span>
+                                <select id="translate-source">
+                                    {% for language in app_data.languages %}
+                                    <option value="{{ language }}" {% if language == 'English' %}selected{% endif %}>{{ language }}</option>
+                                    {% endfor %}
+                                </select>
+                            </label>
+                            <label>
+                                <span>To</span>
+                                <select id="translate-target">
+                                    {% for language in app_data.languages %}
+                                    <option value="{{ language }}" {% if language == 'Hindi' %}selected{% endif %}>{{ language }}</option>
+                                    {% endfor %}
+                                </select>
+                            </label>
+                        </div>
+                        <label>
+                            <span>Input text</span>
+                            <textarea id="translate-input" rows="8" placeholder="Enter text to translate"></textarea>
+                        </label>
+                        <div class="action-row">
+                            <button id="translate-submit">Translate</button>
+                            <button id="translate-speak" class="ghost-button" type="button">Play result</button>
+                        </div>
+                    </section>
+                    <section class="panel-card result-card">
+                        <h2>Result</h2>
+                        <div id="translate-status" class="status"></div>
+                        <textarea id="translate-output" rows="12" readonly placeholder="Translation will appear here"></textarea>
+                        <audio id="translate-audio" controls class="hidden"></audio>
+                    </section>
+                </div>
+            </section>
+
+            <section class="tab-panel" id="tab-analyze">
+                <div class="panel-grid two-column">
+                    <section class="panel-card">
+                        <h2>Grammar Analyzer</h2>
+                        <label>
+                            <span>Language</span>
+                            <select id="analyze-language">
+                                {% for language in app_data.grammar_languages %}
+                                <option value="{{ language }}">{{ language }}</option>
+                                {% endfor %}
+                            </select>
+                        </label>
+                        <label>
+                            <span>Text to analyze</span>
+                            <textarea id="analyze-input" rows="10" placeholder="Paste text for grammar review"></textarea>
+                        </label>
+                        <div class="action-row">
+                            <button id="analyze-submit">Analyze</button>
+                        </div>
+                    </section>
+                    <section class="panel-card result-card">
+                        <h2>Suggestions</h2>
+                        <div id="analyze-status" class="status"></div>
+                        <label>
+                            <span>Corrected text</span>
+                            <textarea id="analyze-output" rows="8" readonly placeholder="Corrected text will appear here"></textarea>
+                        </label>
+                        <div id="analysis-issues" class="issues-list"></div>
+                    </section>
+                </div>
+            </section>
+
+            <section class="tab-panel" id="tab-chat">
+                <div class="panel-grid two-column">
+                    <section class="panel-card">
+                        <h2>Conversation Mode</h2>
+                        <label>
+                            <span>Assistant response language</span>
+                            <select id="chat-language">
+                                {% for language in app_data.languages %}
+                                <option value="{{ language }}" {% if language == 'English' %}selected{% endif %}>{{ language }}</option>
+                                {% endfor %}
+                            </select>
+                        </label>
+                        <label>
+                            <span>Your message</span>
+                            <textarea id="chat-input" rows="5" placeholder="Write a message to practice"></textarea>
+                        </label>
+                        <div class="action-row">
+                            <button id="chat-submit">Send</button>
+                        </div>
+                    </section>
+                    <section class="panel-card result-card">
+                        <h2>Chat</h2>
+                        <div id="chat-status" class="status"></div>
+                        <div id="chat-thread" class="chat-thread"></div>
+                    </section>
+                </div>
+            </section>
+
+            <section class="tab-panel" id="tab-voice">
+                <div class="panel-grid two-column">
+                    <section class="panel-card">
+                        <h2>Voice Translator</h2>
+                        <p class="panel-copy">This uses your browser's speech recognition when available. Speak, review the captured text, then translate it.</p>
+                        <div class="field-row">
+                            <label>
+                                <span>Speak in</span>
+                                <select id="voice-source">
+                                    {% for language in app_data.languages %}
+                                    <option value="{{ language }}" {% if language == 'English' %}selected{% endif %}>{{ language }}</option>
+                                    {% endfor %}
+                                </select>
+                            </label>
+                            <label>
+                                <span>Translate to</span>
+                                <select id="voice-target">
+                                    {% for language in app_data.languages %}
+                                    <option value="{{ language }}" {% if language == 'Hindi' %}selected{% endif %}>{{ language }}</option>
+                                    {% endfor %}
+                                </select>
+                            </label>
+                        </div>
+                        <div class="action-row">
+                            <button id="voice-start">Start listening</button>
+                            <button id="voice-translate" class="ghost-button">Translate captured text</button>
+                        </div>
+                        <div id="voice-status" class="status"></div>
+                        <label>
+                            <span>Captured speech</span>
+                            <textarea id="voice-input" rows="6" placeholder="Speech transcript will appear here"></textarea>
+                        </label>
+                    </section>
+                    <section class="panel-card result-card">
+                        <h2>Voice Result</h2>
+                        <textarea id="voice-output" rows="10" readonly placeholder="Translation will appear here"></textarea>
+                        <audio id="voice-audio" controls class="hidden"></audio>
+                    </section>
+                </div>
+
+                <div class="panel-grid single-column voice-live-grid">
+                    <section class="panel-card">
+                        <h2>Real-Time Two-Way Voice Translation</h2>
+                        <p class="panel-copy">Live interpreter mode for two speakers. Speaker A talks, you hear translated speech for Speaker B, then the app switches direction automatically.</p>
+
+                        <div class="field-row">
+                            <label>
+                                <span>Speaker A language</span>
+                                <select id="live-lang-a">
+                                    {% for language in app_data.languages %}
+                                    <option value="{{ language }}" {% if language == 'English' %}selected{% endif %}>{{ language }}</option>
+                                    {% endfor %}
+                                </select>
+                            </label>
+                            <label>
+                                <span>Speaker B language</span>
+                                <select id="live-lang-b">
+                                    {% for language in app_data.languages %}
+                                    <option value="{{ language }}" {% if language == 'Hindi' %}selected{% endif %}>{{ language }}</option>
+                                    {% endfor %}
+                                </select>
+                            </label>
+                        </div>
+
+                        <div class="action-row">
+                            <button id="live-start" type="button">Start Live Interpreter</button>
+                            <button id="live-stop" class="ghost-button" type="button" disabled>Stop</button>
+                            <button id="live-switch" class="ghost-button" type="button" disabled>Switch Speaker</button>
+                            <button id="live-clear" class="ghost-button" type="button">Clear Transcript</button>
+                        </div>
+
+                        <div id="live-voice-status" class="status"></div>
+                        <div id="live-current-turn" class="status"></div>
+
+                        <div id="live-voice-thread" class="live-voice-thread">
+                            <p class="empty-state">Start interpreter mode to see live conversation turns.</p>
+                        </div>
+
+                        <audio id="live-voice-audio" controls class="hidden"></audio>
+                    </section>
+                </div>
+            </section>
+
+            <section class="tab-panel" id="tab-pdf">
+                <div class="panel-grid two-column">
+                    <section class="panel-card">
+                        <h2>PDF Translator</h2>
+                        <div class="field-row">
+                            <label>
+                                <span>Source language</span>
+                                <select id="pdf-source">
+                                    {% for language in app_data.languages %}
+                                    <option value="{{ language }}" {% if language == 'English' %}selected{% endif %}>{{ language }}</option>
+                                    {% endfor %}
+                                </select>
+                            </label>
+                            <label>
+                                <span>Target language</span>
+                                <select id="pdf-target">
+                                    {% for language in app_data.languages %}
+                                    <option value="{{ language }}" {% if language == 'Hindi' %}selected{% endif %}>{{ language }}</option>
+                                    {% endfor %}
+                                </select>
+                            </label>
+                        </div>
+                        <label class="file-picker">
+                            <span>Select a PDF</span>
+                            <input id="pdf-file" type="file" accept="application/pdf">
+                        </label>
+                        <div class="action-row">
+                            <button id="pdf-submit">Translate PDF</button>
+                        </div>
+                        <div id="pdf-status" class="status"></div>
+                    </section>
+                    <section class="panel-card result-card">
+                        <h2>PDF Output</h2>
+                        <label>
+                            <span>Extracted text</span>
+                            <textarea id="pdf-extracted" rows="5" readonly></textarea>
+                        </label>
+                        <label>
+                            <span>Translated text</span>
+                            <textarea id="pdf-output" rows="7" readonly></textarea>
+                        </label>
+                        <div class="action-row">
+                            <button id="pdf-download" class="ghost-button" type="button" disabled>Download translated text</button>
+                        </div>
+                    </section>
+                </div>
+            </section>
+
+            <section class="tab-panel" id="tab-history">
+                <div class="panel-grid single-column">
+                    <section class="panel-card history-card">
+                        <div class="section-heading">
+                            <div>
+                                <h2>Activity History</h2>
+                                <p class="panel-copy">Recent translations and chat messages are stored locally in history_Pankaj.json.</p>
+                            </div>
+                            <div class="action-row">
+                                <button id="refresh-history" class="ghost-button" type="button">Refresh</button>
+                                <button id="download-history" class="ghost-button" type="button">Download history</button>
+                            </div>
+                        </div>
+                        <div class="history-layout">
+                            <div>
+                                <h3>Translations</h3>
+                                <div id="history-translations" class="history-list"></div>
+                            </div>
+                            <div>
+                                <h3>Conversations</h3>
+                                <div id="history-conversations" class="history-list"></div>
+                            </div>
+                        </div>
+                        <div id="history-status" class="status"></div>
+                    </section>
+                </div>
+            </section>
+        </main>
+        </div>
+    </div>
+
+    <script id="bootstrap-data" type="application/json">{{ app_data | tojson }}</script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
