@@ -1,13 +1,7 @@
 Flask
 deep-translator
-streamlit
-streamlit-authenticator
 bcrypt
-SpeechRecognition
-pyttsx3
 gTTS
 PyPDF2
 language-tool-python
-streamlit-chat
-streamlit-extras
-PyAudio
+gunicorn
