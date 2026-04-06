@@ -110,7 +110,10 @@ The goal of this project is to provide a single learning and communication tool 
 
 1. Clone or download the project.
 2. Create and activate a virtual environment (recommended).
-3. Install dependencies:
+```bash
+venv\Scripts\activate
+```   
+4. Install dependencies:
 
 ```bash
 pip install -r requirements.txt
