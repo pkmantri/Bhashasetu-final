@@ -958,4 +958,5 @@ def forgot_password_reset() -> Any:
 
 if __name__ == "__main__":
     ensure_runtime_paths()
-    app.run(debug=True)
+    port = int(os.getenv("PORT", "5000"))
+    app.run(host="0.0.0.0", port=port, debug=False)
