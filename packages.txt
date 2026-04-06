@@ -1,0 +1,3 @@
+default-jre
+portaudio19-dev
+libportaudio2
