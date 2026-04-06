@@ -11,6 +11,21 @@ The goal of this project is to provide a single learning and communication tool 
 - Convert speech to text and text back to speech.
 - Translate complete PDF documents.
 
+## Dependencies
+-Flask – Used to build the backend/server-side logic of the web app.
+-deep-translator – Used to translate text between different languages.
+-streamlit – Used to create the interactive web interface easily.
+-streamlit-authenticator – Used to add user login and authentication system.
+-bcrypt – Used to securely hash and store user passwords.
+-SpeechRecognition – Used to convert spoken audio into text.
+-pyttsx3 – Used for offline text-to-speech conversion.
+-gTTS – Used to convert text into spoken audio using Google Text-to-Speech.
+-PyPDF2 – Used to read and extract text from PDF files.
+-language-tool-python – Used to check grammar and correct language errors.
+-streamlit-chat – Used to create a chat-style messaging interface in Streamlit.
+-streamlit-extras – Used to add extra UI components and features to Streamlit apps.
+-PyAudio – Used to capture microphone audio input in real time.
+
 ## Core Features
 
 ### 1. User Authentication and Account Management
